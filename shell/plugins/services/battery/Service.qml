@@ -13,7 +13,9 @@ Item {
   readonly property int batteryThreshold: 10
   // Must match the summary omarchy-battery-low sends
   readonly property string lowBatterySummary: "Time to recharge!"
-  property bool batteryChecked: false
+  // Checks left to dismiss a warning restored by a previous shell (about a minute at the 30s timer).
+  // Not persisted: popups restore asynchronously, so a single check after a restart can miss the toast.
+  property int restartChecksLeft: 3
   property string pendingPowerSource: ""
   property string activePowerProfile: ""
   readonly property bool powerSaverOnBattery: UPower.onBattery && activePowerProfile === "power-saver"
@@ -33,14 +35,15 @@ Item {
   }
 
   function checkBattery() {
-    var state = BatteryModel.shouldWarnLowBattery(UPower.displayDevice, UPower.onBattery, UPowerDeviceState.Discharging, batteryThreshold, persisted.notifiedLowBattery, !batteryChecked)
-    batteryChecked = true
+    var state = BatteryModel.shouldWarnLowBattery(UPower.displayDevice, UPower.onBattery, UPowerDeviceState.Discharging, batteryThreshold, persisted.notifiedLowBattery, restartChecksLeft > 0)
+    restartChecksLeft = BatteryModel.remainingRestartChecks(restartChecksLeft, state.level)
     persisted.notifiedLowBattery = state.notifiedLowBattery
     if (state.notify) sendLowBatteryWarning(state.level)
     if (state.dismiss) dismissLowBatteryWarning()
   }
 
   function dismissLowBatteryWarning() {
+    if (dismissProcess.running) return
     dismissProcess.command = ["omarchy-notification-dismiss", lowBatterySummary]
     dismissProcess.running = true
   }

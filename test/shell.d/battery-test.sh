@@ -46,13 +46,21 @@ assertDeepEqual(
 assertDeepEqual(
   battery.shouldWarnLowBattery({ isPresent: true, percentage: 0.4, state: discharging }, false, discharging, 10, false, true),
   { level: 40, notify: false, dismiss: true, notifiedLowBattery: false },
-  'battery dismisses a restored warning on the first check after a shell restart'
+  'battery dismisses a restored warning in the checks after a shell restart'
 )
 assertDeepEqual(
   battery.shouldWarnLowBattery({ isPresent: true, percentage: 0.08, state: discharging }, true, discharging, 10, false, true),
   { level: 8, notify: true, dismiss: false, notifiedLowBattery: true },
-  'battery still warns on the first check when low'
+  'battery still warns after a shell restart when low'
 )
+assertDeepEqual(
+  battery.shouldWarnLowBattery({ isPresent: false }, false, discharging, 10, false, true),
+  { level: -1, notify: false, dismiss: false, notifiedLowBattery: false },
+  'battery waits for a known level before dismissing after a shell restart'
+)
+assertEqual(battery.remainingRestartChecks(3, 40), 2, 'battery counts a restart check with a known level')
+assertEqual(battery.remainingRestartChecks(3, -1), 3, 'battery keeps restart checks while the battery is unknown')
+assertEqual(battery.remainingRestartChecks(0, 40), 0, 'battery restart checks stop at zero')
 JS
 
 summary_in_script=$(sed -n 's/.*-u critical "\([^"]*\)".*/\1/p' "$ROOT/bin/omarchy-battery-low")
