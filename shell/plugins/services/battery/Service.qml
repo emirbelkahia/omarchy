@@ -16,6 +16,7 @@ Item {
   // Checks left to dismiss a warning restored by a previous shell (about a minute at the 30s timer).
   // Not persisted: popups restore asynchronously, so a single check after a restart can miss the toast.
   property int restartChecksLeft: 3
+  property bool dismissPending: false
   property string pendingPowerSource: ""
   property string activePowerProfile: ""
   readonly property bool powerSaverOnBattery: UPower.onBattery && activePowerProfile === "power-saver"
@@ -43,7 +44,12 @@ Item {
   }
 
   function dismissLowBatteryWarning() {
-    if (dismissProcess.running) return
+    // A new toast can appear while an earlier dismiss is still running: run again once it exits
+    if (dismissProcess.running) {
+      dismissPending = true
+      return
+    }
+    dismissPending = false
     dismissProcess.command = ["omarchy-notification-dismiss", lowBatterySummary]
     dismissProcess.running = true
   }
@@ -83,7 +89,10 @@ Item {
   }
 
   Process { id: warningProcess }
-  Process { id: dismissProcess }
+  Process {
+    id: dismissProcess
+    onExited: if (root.dismissPending) root.dismissLowBatteryWarning()
+  }
 
   Process {
     id: powerProfileProcess
