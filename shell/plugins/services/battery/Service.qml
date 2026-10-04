@@ -55,6 +55,8 @@ Item {
   }
 
   function sendLowBatteryWarning(level) {
+    // A dismiss queued before the battery went low again must not close this new warning
+    dismissPending = false
     if (warningProcess.running) return
     warningProcess.command = [
       "omarchy-battery-low",
