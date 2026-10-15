@@ -12,8 +12,8 @@ Item {
   property string omarchyPath: Quickshell.env("OMARCHY_PATH")
 
   readonly property int batteryThreshold: 10
-  // Must match the summary omarchy-battery-low sends
-  readonly property string lowBatterySummary: "Time to recharge!"
+  // Must match the catalog key omarchy-battery-low sends as the summary
+  readonly property string lowBatteryTitleKey: "battery.lowTitle"
   // Checks left to dismiss a warning restored by a previous shell (about a minute at the 30s timer).
   // Not persisted: popups restore asynchronously, so a single check after a restart can miss the toast.
   property int restartChecksLeft: 3
@@ -58,7 +58,8 @@ Item {
       return
     }
     dismissPending = false
-    dismissProcess.command = ["omarchy-notification-dismiss", lowBatterySummary]
+    // The summary is translated, so look it up the same way omarchy-battery-low does
+    dismissProcess.command = ["bash", "-c", "omarchy-notification-dismiss \"$(omarchy-i18n \"$1\")\"", "bash", lowBatteryTitleKey]
     dismissProcess.running = true
   }
 

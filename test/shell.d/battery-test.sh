@@ -89,7 +89,7 @@ assertEqual(battery.remainingRestartChecks(3, -1), 3, 'battery keeps restart che
 assertEqual(battery.remainingRestartChecks(0, 40), 0, 'battery restart checks stop at zero')
 JS
 
-summary_in_script=$(sed -n 's/.*-u critical "\([^"]*\)".*/\1/p' "$ROOT/bin/omarchy-battery-low")
-summary_in_service=$(sed -n 's/.*lowBatterySummary: "\([^"]*\)".*/\1/p' "$ROOT/shell/plugins/services/battery/Service.qml")
-[[ -n $summary_in_script && $summary_in_script == "$summary_in_service" ]] || fail 'battery service dismisses the summary omarchy-battery-low sends'
+summary_key_in_script=$(sed -n 's/.*-u critical "$(omarchy-i18n \([^)]*\))".*/\1/p' "$ROOT/bin/omarchy-battery-low")
+summary_key_in_service=$(sed -n 's/.*lowBatteryTitleKey: "\([^"]*\)".*/\1/p' "$ROOT/shell/plugins/services/battery/Service.qml")
+[[ -n $summary_key_in_script && $summary_key_in_script == "$summary_key_in_service" ]] || fail 'battery service dismisses the summary omarchy-battery-low sends'
 pass 'battery service dismisses the summary omarchy-battery-low sends'
